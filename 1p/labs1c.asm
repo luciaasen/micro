@@ -30,19 +30,33 @@ ASSUME CS: CODE, DS: DATOS, ES: EXTRA, SS: PILA
 ; BEGINNING OF THE MAIN PROCEDURE
 INICIO PROC
 ; INITIALIZE THE SEGMENT REGISTERS
-MOV AX, DATOS
-MOV DS, AX
-MOV AX, PILA
-MOV SS, AX
-MOV AX, EXTRA
-MOV ES, AX
-MOV SP, 64 ; LOAD THE STACK POINTER WITH THE HIGHEST VALUE
-;
-; PROGRAM START
-; -- to be completed with the instructions requested
-; PROGRAM END
-MOV AX, 4C00H
-INT 21H
+	MOV AX, DATOS
+	MOV DS, AX
+	MOV AX, PILA
+	MOV SS, AX
+	MOV AX, EXTRA
+	MOV ES, AX
+	MOV SP, 64 ; LOAD THE STACK POINTER WITH THE HIGHEST VALUE
+
+	;
+	; PROGRAM START
+	; Initialize ds, bx y di with the data necessary 
+	; to test the address accessed in ex 1 c)
+	MOV BX, 0511H
+	MOV DS, BX
+	MOV BX, 0211H
+	MOV DI, 1010H
+	 
+	; The expected accessed address here is 06344h
+	MOV AL, DS:[1234H]
+	; The expected accessed address here is 05321H
+	MOV AX, [BX]
+	; The expected accessed address here is 06120H
+	MOV [DI], AL
+
+	; PROGRAM END
+	MOV AX, 4C00H
+	INT 21H
 INICIO ENDP
 ; END OF CODE SEGMENT
 CODE ENDS

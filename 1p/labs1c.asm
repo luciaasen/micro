@@ -1,6 +1,6 @@
 ;**************************************************************************
 ; LAB SESSION 1 - EXERCISE C MBS 2018
-; TEAM #
+; TEAM #10
 ; AUTHORS:
 ; Lucia Asencio - lucia.asencio@estudiante.uam.es
 ; David García Fernández - david.garcia03@estudiante.uam.es
@@ -53,7 +53,12 @@ INICIO PROC
 	MOV AX, [BX]
 	; The expected accessed address here is 06120H
 	MOV [DI], AL
-
+	
+	; Important note: This program is unpredictable,
+	; we are accessing very low memory addresses and 
+	; they could be assigned to the OS. If this happens
+	; the execution fails.
+	
 	; PROGRAM END
 	MOV AX, 4C00H
 	INT 21H

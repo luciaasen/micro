@@ -1,6 +1,6 @@
 ;**************************************************************************
 ; LAB SESSION 1 - EXERCISE B MBS 2018
-; TEAM #
+; TEAM #10
 ; AUTHORS:
 ; Lucia Asencio - lucia.asencio@estudiante.uam.es
 ; David García Fernández - david.garcia03@estudiante.uam.es
@@ -52,10 +52,6 @@ INICIO PROC
 	;; AX has already the complete value of GRAB
 	MOV COUNTER, AH
 
-	;
-	; PROGRAM START
-	; -- to be completed with the instructions requested
-	; PROGRAM END
 	MOV AX, 4C00H
 	INT 21H
 INICIO ENDP

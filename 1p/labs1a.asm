@@ -1,6 +1,6 @@
 ;**************************************************************************
 ; LAB SESSION 1 - EXERCISE A MBS 2018
-; TEAM #
+; TEAM #10
 ; AUTHORS:
 ; Lucia Asencio - lucia.asencio@estudiante.uam.es
 ; David García Fernández - david.garcia03@estudiante.uam.es

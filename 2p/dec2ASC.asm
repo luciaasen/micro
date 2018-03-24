@@ -46,9 +46,9 @@ INICIO PROC
 	CALL ASCII 
 	
 	; Print the value.
-	MOV AH, 9h ; First we select the interruption type.
+	MOV AH, 9h            ; First we select the interruption type.
 	MOV DX, OFFSET result ; Now we move to dx the offset of the string.
-	INT 21H ; Calling the interruption.
+	INT 21H               ; Calling the interruption.
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;
 	; SECOND EXAMPLE -> 1234 ;
@@ -61,9 +61,9 @@ INICIO PROC
 	CALL ASCII 
 	
 	; Print the value.
-	MOV AH, 9h ; First we select the interruption type.
+	MOV AH, 9h            ; First we select the interruption type.
 	MOV DX, OFFSET result ; Now we move to dx the offset of the string.
-	INT 21H ; Calling the interruption.
+	INT 21H               ; Calling the interruption.
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;
 	; THIRD EXAMPLE -> 416 ;
@@ -76,9 +76,9 @@ INICIO PROC
 	CALL ASCII 
 	
 	; Print the value.
-	MOV AH, 9h ; First we select the interruption type.
+	MOV AH, 9h            ; First we select the interruption type.
 	MOV DX, OFFSET result ; Now we move to dx the offset of the string.
-	INT 21H ; Calling the interruption.
+	INT 21H               ; Calling the interruption.
 	
 	;;;;;;;;;;;;;;;;;;;;;;;
 	; FOURTH EXAMPLE -> 0 ;
@@ -91,9 +91,9 @@ INICIO PROC
 	CALL ASCII 
 	
 	; Print the value.
-	MOV AH, 9h ; First we select the interruption type.
+	MOV AH, 9h            ; First we select the interruption type.
 	MOV DX, OFFSET result ; Now we move to dx the offset of the string.
-	INT 21H ; Calling the interruption.
+	INT 21H               ; Calling the interruption.
 	
 	; PROGRAM END
 	MOV AX, 4C00H

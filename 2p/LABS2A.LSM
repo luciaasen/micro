@@ -1,0 +1,203 @@
+Turbo Assembler	 Version 2.0	    03/28/18 20:14:16	    Page 1
+labs2a.asm
+
+
+
+      1
+      2				     ;**************************************************************************
+      3				     ; LAB SESSION 2 - EXERCISE	2 MBS 2018
+      4				     ; TEAM #6
+      5				     ; AUTHORS:
+      6				     ; Lucia Asencio - lucia.asencio@estudiante.uam.es
+      7				     ; David García Fernández	- david.garcia03@estudiante.uam.es
+      8				     ;**************************************************************************
+      9
+     10				     ;**************************************************************************
+     11				     ; DATA SEGMENT DEFINITION
+     12	0000			     DATOS SEGMENT
+     13
+     14	0000  07*(00)		     result db 7 dup (0) ; Multiplying vector(1,4) x matrix(4,7) results in a
+     15							 ; vector(1,7) for which we allocate memory
+     16
+     17	0007  01 00 00 00	     matrix db 1, 0, 0,	0; ;We allocate	the 7x4	Transposed Generation Matrix
+     18	000B  00 01 00 00		    db 0, 1, 0,	0  ;to make a better memory access when	multiplying
+     19	000F  00 00 01 00		    db 0, 0, 1,	0
+     20	0013  00 00 00 01		    db 0, 0, 0,	1
+     21	0017  01 01 00 01		    db 1, 1, 0,	1
+     22	001B  01 00 01 01		    db 1, 0, 1,	1
+     23	001F  00 01 01 01		    db 0, 1, 1,	1
+     24
+     25	0023			     DATOS ENDS
+     26
+     27				     ;**************************************************************************
+     28				     ; STACK SEGMENT DEFINITION
+     29	0000			     PILA SEGMENT STACK	"STACK"
+     30	0000			     PILA ENDS
+     31
+     32				     ;**************************************************************************
+     33				     ; EXTRA SEGMENT DEFINITION
+     34	0000			     EXTRA SEGMENT
+     35	0000			     EXTRA ENDS
+     36
+     37				     ;**************************************************************************
+     38				     ; CODE SEGMENT DEFINITION
+     39	0000			     CODE SEGMENT
+     40				     ASSUME CS:	CODE, DS: DATOS, ES: EXTRA, SS:	PILA
+     41				     ; BEGINNING OF THE	MAIN PROCEDURE
+     42	0000			     INICIO PROC
+     43					 ; INITIALIZE THE SEGMENT REGISTERS
+     44	0000  B8 0000s			 MOV AX, DATOS
+     45	0003  8E D8			 MOV DS, AX
+     46
+     47					 ; DX:BX contains the vector to	be multiplied
+     48	0005  BA 0100			 MOV DX, 0100h
+     49	0008  BB 0101			 MOV BX, 0101h
+     50
+     51					 ; Calling the function	that multiplies	vector x matrix
+     52	000B  E8 0000			 CALL MULTIPLY
+     53
+     54	000E			     INICIO ENDP
+     55
+     56
+     57				     ;__________________________________________________________________________
+Turbo Assembler	 Version 2.0	    03/28/18 20:14:16	    Page 2
+labs2a.asm
+
+
+
+     58				     ; SUBROUTINE THAT COMPUTES	THE MULTIPLICATION OF A	VECTOR AND A MATRIX AND
+     59				     ; RETURNS THE RESULT VECTOR MODULO	2
+     60				     ; INPUT:	 4 BINARY DIGITS WILL BE READ FROM DX:BX
+     61				     ; OUTPUT:	 THE VECTOR WILL BE STORED IN [DX:AX]
+     62				     ;__________________________________________________________________________
+     63
+     64	000E			     MULTIPLY PROC NEAR
+     65
+     66	000E  BF 0000			 MOV DI, 0 ; DI	will be	the result vector index	and matrix row index
+     67	0011			     EACH_ROW:
+     68	0011  BD 0000			 MOV BP, 0 ; BP	will be	the input vector index and matrix column index
+     69	0014			     P_ESCALAR:
+     70					 ; We will write in result[SI],	but we need to read matrix[BP +	SI*4]
+     71					 ; Therefore, we will compute DI <= SI*4
+     72					 ; Instead of using MUL, we will use SHL
+     73	0014  8B FE			 MOV DI, SI			; We write a copy of SI	in DI
+     74	0016  B1 02			 MOV CL, 2			; We want to shift twice
+     75	0018  D3 E7			 SHL DI, CL			; DI <=	4*DI
+     76
+     77	001A  8A			 MOV AL, BYTE PTR DX[BP]	; Factor1 = input vector BP-th element
+**Error** labs2a.asm(77) Illegal indexing mode
+     78	001B  3E: F6 A3	0007r		 MUL matrix[BP][DI]		; Factor2 = Matrix element multiplied
+     79	0020  00 84 0000r		 ADD result[SI], BYTE PTR AL	; Result in AX is added	to what	we had in
+     80					 ; SERA	AX[0] o	AX[1]
+     81	0024  45			 INC BP				; Increment de input vector index
+     82	0025  83 FD 02			 CMP BP, 2		       ; until we have finished	with the
+     83	0028  75 EA			 JNZ P_ESCALAR			; part of the vector that is in	DX
+     84
+     85	002A  83 C7 04			 ADD DI, 4			; Increment the	matrix rows index
+     86	002D  83 FF 1C			 CMP DI, 28			; Until	we have	multiplied the 7 rows
+     87	0030  75 DF			 JNZ EACH_ROW
+     88
+     89					 ; Now,	we have	to repeat the same but with the	part of	the input vector
+     90					 ; that	is in BX
+     91
+     92	0032  BF 0000			 MOV DI, 0 ; DI	will be	the result vector index	and matrix row index
+     93	0035			     EACH_ROW2:
+     94	0035  BD 0000			 MOV BP, 0 ; BP	will be	the input vector index and matrix column index
+     95	0038			     P_ESCALAR2:
+     96					 ; Same	as before, DI <= SI*4
+     97	0038  8B FE			 MOV DI, SI			; We write a copy of SI	in DI
+     98	003A  B1 02			 MOV CL, 2			; We want to shift twice
+     99	003C  D3 E7			 SHL DI, CL			; DI <=	4*DI
+    100
+    101	003E  8A			 MOV AL, BYTE PTR BX[BP]	; Factor1 = input vector BP-th element
+**Error** labs2a.asm(101) Illegal indexing mode
+    102	003F  3E: F6 A3	0007r		 MUL matrix[BP][DI]		; Factor2 = Matrix element multiplied
+    103	0044  01 84 0000r		 ADD result[SI], BYTE PTR AX	; Result in AX is added	to what	we had in
+**Error** labs2a.asm(103) Operand types	do not match
+    104					 ; SERA	AX([0])	o AX[1]?
+    105	0048  45			 INC BP				; Increment de input vector index
+    106	0049  83 FD 02			 CMP BP, 2		       ; until we have finished	with the
+    107	004C  75 EA			 JNZ P_ESCALAR2			; part of the vector that is in	BX
+    108
+    109	004E  83 C7 04			 ADD DI, 4			; Increment the	matrix rows index
+    110	0051  83 FF 1C			 CMP DI, 28			; Until	we have	multiplied the 7 rows
+    111	0054  75 DF			 JNZ EACH_ROW2
+Turbo Assembler	 Version 2.0	    03/28/18 20:14:16	    Page 3
+labs2a.asm
+
+
+
+    112
+    113					 ; The multiplication is done, now we compute modulo
+    114					 ; We use unsigned division (we	are working with numbers that are
+    115					 ; the result of adding	1's and	0's)
+    116					 ; We use 8-bit	division because the greatest number we	are going to
+    117					 ; divide is 1*1 + 1*1 + 1*1 + 1*1 = 4
+    118	0056  B9 0002			 MOV CX, 2 ; CX	<= 2 because we	are working modulo 2, 2	is the divisor
+    119	0059  BF 0000			 MOV DI, 0 ; DI	will index the result vector
+    120
+    121
+    122	005C			     MODULO:
+    123	005C  8B 85 0000r		 MOV AX, result[DI]		; AX is	the dividend
+**Error** labs2a.asm(123) Operand types	do not match
+    124	0060  F7 F1			 DIV CX				; AX/2
+    125	0062  88 A5 0000r		 MOV result [DI], AH		; result[DI] <=	remainder
+    126
+    127	0066  47			 INC DI				; We repeat for	each element
+    128	0067  83 FF 07			 CMP DI, 7			; of the result	vector
+    129	006A  75 F0			 JNZ MODULO
+    130
+    131					 ; Store result	vector position	in DX:AX
+    132	006C  8C DA			 MOV DX, DS		 ; DX is the segment where the result vector is.
+    133	006E  B8 0000r			 MOV AX, OFFSET	result	 ; AX contains the OFFSET of the result	vector.
+    134
+    135
+    136	0071  C3			 RET
+    137	0072			     MULTIPLY ENDP
+    138
+    139				     ; END OF CODE SEGMENT
+    140	0072			     CODE ENDS
+    141				     ; END OF PROGRAM. OBS: INCLUDES THE ENTRY OR THE FIRST PROCEDURE
+    142				     END INICIO
+Turbo Assembler	 Version 2.0	    03/28/18 20:14:16	    Page 4
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/28/18"
+??FILENAME			  Text	 "labs2a  "
+??TIME				  Text	 "20:14:16"
+??VERSION			  Number 0200
+@CPU				  Text	 0101H
+@CURSEG				  Text	 CODE
+@FILENAME			  Text	 LABS2A
+@WORDSIZE			  Text	 2
+EACH_ROW			  Near	 CODE:0011
+EACH_ROW2			  Near	 CODE:0035
+INICIO				  Near	 CODE:0000
+MATRIX				  Byte	 DATOS:0007
+MODULO				  Near	 CODE:005C
+MULTIPLY			  Near	 CODE:000E
+P_ESCALAR			  Near	 CODE:0014
+P_ESCALAR2			  Near	 CODE:0038
+RESULT				  Byte	 DATOS:0000
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+CODE				  16  0072 Para	  none
+DATOS				  16  0023 Para	  none
+EXTRA				  16  0000 Para	  none
+PILA				  16  0000 Para	  Stack	  STACK
+Turbo Assembler	 Version 2.0	    03/28/18 20:14:16	    Page 5
+Error Summary
+
+
+
+**Error** labs2a.asm(77) Illegal indexing mode
+**Error** labs2a.asm(101) Illegal indexing mode
+**Error** labs2a.asm(103) Operand types	do not match
+**Error** labs2a.asm(123) Operand types	do not match
+

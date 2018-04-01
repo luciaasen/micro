@@ -1,0 +1,205 @@
+Turbo Assembler	 Version 2.0	    04/02/18 01:18:22	    Page 1
+dec2ASC.asm
+
+
+
+      1				     ;**************************************************************************
+      2				     ; LAB SESSION 2 - EXERCISE	1 MBS 2018
+      3				     ; TEAM #6
+      4				     ; AUTHORS:
+      5				     ; Lucia Asencio - lucia.asencio@estudiante.uam.es
+      6				     ; David García Fernández	- david.garcia03@estudiante.uam.es
+      7				     ;**************************************************************************
+      8
+      9				     ;**************************************************************************
+     10				     ; DATA SEGMENT DEFINITION
+     11	0000			     DATOS SEGMENT
+     12	0000  07*(00)		     result db 7 dup (0) ; The maximum size of a 16 bits number	will be	5 characters.
+     13									     ; also we need space for the sentinel and the linebreak.
+     14									     ; The initial value is zero, so if	the number has less +
+     15				     than
+     16									     ; five digits those non-used bytes	will be	blank	    +
+     17				     spaces.
+     18	0007			     DATOS ENDS
+     19
+     20				     ;**************************************************************************
+     21				     ; STACK SEGMENT DEFINITION
+     22	0000			     PILA SEGMENT STACK	"STACK"
+     23	0000			     PILA ENDS
+     24
+     25				     ;**************************************************************************
+     26				     ; EXTRA SEGMENT DEFINITION
+     27	0000			     EXTRA SEGMENT
+     28	0000			     EXTRA ENDS
+     29
+     30				     ;**************************************************************************
+     31				     ; CODE SEGMENT DEFINITION
+     32	0000			     CODE SEGMENT
+     33				     ASSUME CS:	CODE, DS: DATOS, ES: EXTRA, SS:	PILA
+     34				     ; BEGINNING OF THE	MAIN PROCEDURE
+     35	0000			     INICIO PROC
+     36				     ; INITIALIZE THE SEGMENT REGISTERS
+     37	0000  B8 0000s			     MOV AX, DATOS
+     38	0003  8E D8			     MOV DS, AX
+     39
+     40					     ;;;;;;;;;;;;;;;;;;;;;;;;;;
+     41					     ; FIRST EXAMPLE ->	65335 ;
+     42					     ;;;;;;;;;;;;;;;;;;;;;;;;;;
+     43
+     44					     ; BX contains the number to be printed.
+     45	0005  BB FF37			     MOV BX, 65335
+     46
+     47					     ; Calling the function. BX	should have the	number to be printed.
+     48	0008  E8 0033			     CALL ASCII
+     49
+     50					     ; Print the value.
+     51	000B  B4 09			     MOV AH, 9h		   ; First we select the interruption type.
+     52	000D  BA 0000r			     MOV DX, OFFSET result ; Now we move to dx the offset of the string.
+     53	0010  CD 21			     INT 21H		   ; Calling the interruption.
+     54
+     55					     ;;;;;;;;;;;;;;;;;;;;;;;;;
+     56					     ; SECOND EXAMPLE -> 1234 ;
+     57					     ;;;;;;;;;;;;;;;;;;;;;;;;;
+Turbo Assembler	 Version 2.0	    04/02/18 01:18:22	    Page 2
+dec2ASC.asm
+
+
+
+     58
+     59					     ; BX contains the number to be printed.
+     60	0012  BB 04D2			     MOV BX, 1234
+     61
+     62					     ; Calling the function. BX	should have the	number to be printed.
+     63	0015  E8 0026			     CALL ASCII
+     64
+     65					     ; Print the value.
+     66	0018  B4 09			     MOV AH, 9h		   ; First we select the interruption type.
+     67	001A  BA 0000r			     MOV DX, OFFSET result ; Now we move to dx the offset of the string.
+     68	001D  CD 21			     INT 21H		   ; Calling the interruption.
+     69
+     70					     ;;;;;;;;;;;;;;;;;;;;;;;;
+     71					     ; THIRD EXAMPLE ->	416 ;
+     72					     ;;;;;;;;;;;;;;;;;;;;;;;;
+     73
+     74					     ; BX contains the number to be printed.
+     75	001F  BB 01A0			     MOV BX, 416
+     76
+     77					     ; Calling the function. BX	should have the	number to be printed.
+     78	0022  E8 0019			     CALL ASCII
+     79
+     80					     ; Print the value.
+     81	0025  B4 09			     MOV AH, 9h		   ; First we select the interruption type.
+     82	0027  BA 0000r			     MOV DX, OFFSET result ; Now we move to dx the offset of the string.
+     83	002A  CD 21			     INT 21H		   ; Calling the interruption.
+     84
+     85					     ;;;;;;;;;;;;;;;;;;;;;;;
+     86					     ; FOURTH EXAMPLE -> 0 ;
+     87					     ;;;;;;;;;;;;;;;;;;;;;;;
+     88
+     89					     ; BX contains the number to be printed.
+     90	002C  BB 0007			     MOV BX, 7
+     91
+     92					     ; Calling the function. BX	should have the	number to be printed.
+     93	002F  E8 000C			     CALL ASCII
+     94
+     95					     ; Print the value.
+     96	0032  B4 09			     MOV AH, 9h		   ; First we select the interruption type.
+     97	0034  BA 0000r			     MOV DX, OFFSET result ; Now we move to dx the offset of the string.
+     98	0037  CD 21			     INT 21H		   ; Calling the interruption.
+     99
+    100					     ; PROGRAM END
+    101	0039  B8 4C00			     MOV AX, 4C00H
+    102	003C  CD 21			     INT 21H
+    103	003E			     INICIO ENDP
+    104
+    105
+    106				     ;__________________________________________________________________________
+    107				     ; SUBRUTINE TO TRANSLATE AN INTEGER TO ASCII
+    108				     ; INPUT: BX = Number to be	printed	in ASCII
+    109				     ; OUTPUT: DX = Segment where the string is	saved, AX = Offset of the string
+    110				     ;__________________________________________________________________________
+    111
+    112	003E			     ASCII PROC	NEAR
+    113					     ; Moving the number to AX to divide it.
+    114	003E  8B C3			     MOV AX, BX
+Turbo Assembler	 Version 2.0	    04/02/18 01:18:22	    Page 3
+dec2ASC.asm
+
+
+
+    115					     ; To get the decimal character we need to divide by ten.
+    116	0040  B9 000A			     MOV CX, 10
+    117					     ; The number's max. size will be five digits plus the sentinel
+    118					     ; so we write backguards from the sixth position.
+    119	0043  BB 0006			     MOV BX, 6
+    120
+    121					     ; We have to make sure that the string in memory is clean,
+    122					     ; in other	case there could be overriden values if	we make
+    123					     ; multiple	executions at a	time.
+    124	0046  C7 06 0000r 0000		     MOV WORD PTR result, 0
+    125	004C  C7 06 0002r 0000		     MOV WORD PTR result[2], 0
+    126	0052  C6 06 0004r 00		     MOV result[4], 0
+    127
+    128					     ; Writing the sentinel at the end of the string.
+    129	0057  C6 87 0000r 24		     MOV result[BX], '$'
+    130					     ; Writing the linebreak, if we print multiple numbers we need it.
+    131	005C  83 C3 FF			     ADD BX, -1
+    132	005F  C6 87 0000r 0A		     MOV result[BX], 10
+    133	0064			     DIVIDE:
+    134					     ; We have to set DX to zero each time we divide because it	can
+    135					     ; point to	a different memory position (we	are working with 16 bits divisors).
+    136	0064  BA 0000			     MOV DX, 0
+    137					     ; Division.
+    138	0067  F7 F1			     DIV CX
+    139					     ; We have to add this value to the	remainder to convert it	to ASCII.
+    140	0069  83 C2 30			     ADD DX, 030h
+    141					     ; Decreasing the pointer of the string to write the next character.
+    142	006C  83 C3 FF			     ADD BX, -1
+    143					     ; We know that the	remainder wont be greater than a byte so we use
+    144					     ; DL to avoid the use of castings.
+    145	006F  88 97 0000r		     MOV result[BX], DL
+    146					     ; If the quotient is not zero we continue with the	algorithm.
+    147	0073  3D 0000			     CMP AX, 0
+    148	0076  75 EC			     JNE DIVIDE
+    149
+    150					     ; If the quotient is zero the algorithm stops.
+    151
+    152					     ; DX contains the segment where the string	is saved.
+    153	0078  8C DA			     MOV DX, DS
+    154					     ; AX contains the OFFSET.
+    155	007A  B8 0000r			     MOV AX, OFFSET result
+    156	007D  C3			     RET
+    157	007E			     ASCII ENDP
+    158
+    159				     ; END OF CODE SEGMENT
+    160	007E			     CODE ENDS
+    161				     ; END OF PROGRAM. OBS: INCLUDES THE ENTRY OR THE FIRST PROCEDURE (i.e. “INICIO”)
+    162				     END INICIO
+Turbo Assembler	 Version 2.0	    04/02/18 01:18:22	    Page 4
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "04/02/18"
+??FILENAME			  Text	 "dec2ASC "
+??TIME				  Text	 "01:18:22"
+??VERSION			  Number 0200
+@CPU				  Text	 0101H
+@CURSEG				  Text	 CODE
+@FILENAME			  Text	 DEC2ASC
+@WORDSIZE			  Text	 2
+ASCII				  Near	 CODE:003E
+DIVIDE				  Near	 CODE:0064
+INICIO				  Near	 CODE:0000
+RESULT				  Byte	 DATOS:0000
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+CODE				  16  007E Para	  none
+DATOS				  16  0007 Para	  none
+EXTRA				  16  0000 Para	  none
+PILA				  16  0000 Para	  Stack	  STACK
+

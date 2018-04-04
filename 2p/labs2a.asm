@@ -11,6 +11,10 @@
 ; DATA SEGMENT DEFINITION
 DATOS SEGMENT
 
+;***************** DATOS PARA LA MULTIPLICACION *******************
+
+input_vector db 01h, 00h, 01h, 01h
+
 result db 7 dup (0) ; Multiplying vector(1,4) x matrix(4,7) results in a
                     ; vector(1,7) for which we allocate memory
 
@@ -22,15 +26,18 @@ matrix db 1, 0, 0, 0; ;We allocate the 7x4 Transposed Generation Matrix
        db 1, 0, 1, 1
        db 0, 1, 1, 1
 
+
+;***************** DATOS PARA LA IMPRESION *******************
+
 input db 'Input: "X X X X"', 13, 10, '$'
 output db 'Output: "X X X X X X X"', 13, 10, '$'
 comp db 'Computation:', 13, 10, '$'
 fin db '"', 13, 10, '$'
-ini db  '      | P1 | P2 | D1 | P4 | D2 | D3 | D4', 13, 10, '$'
+ini db   '      | P1 | P2 | D1 | P4 | D2 | D3 | D4', 13, 10, '$'
 word_ db 'Word  | ?  | ?  | X  | ?  | X  | X  | X', 13, 10, '$'
-p1 db   'P1    | X  |    | X  |    | X  |    | X', 13, 10, '$'
-p2 db   'P2    |    | X  | X  |    |    | X  | X', 13, 10, '$'
-p4 db   'P4    |    |    |    | X  | X  | X  | X', 13, 10, '$'
+p1 db    'P1    | X  |    | X  |    | X  |    | X', 13, 10, '$'
+p2 db    'P2    |    | X  | X  |    |    | X  | X', 13, 10, '$'
+p4 db    'P4    |    |    |    | X  | X  | X  | X', 13, 10, '$'
 
 DATOS ENDS
 
@@ -55,8 +62,10 @@ INICIO PROC
     MOV DS, AX
     
     ; DX:BX contains the vector to be multiplied
-    MOV DX, 0100h
-    MOV BX, 0101h
+    MOV DH, input_vector[0]
+    MOV DL, input_vector[1]
+    MOV BH, input_vector[2]
+    MOV BL, input_vector[3]
 
     ; Calling the function that multiplies vector x matrix
     CALL MULTIPLY

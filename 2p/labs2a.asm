@@ -11,7 +11,7 @@
 ; DATA SEGMENT DEFINITION
 DATOS SEGMENT
 
-;***************** DATOS PARA LA MULTIPLICACION *******************
+;***************** MULTIPLY DATA ********************
 
 input_vector db 01h, 00h, 01h, 01h
 
@@ -27,7 +27,7 @@ matrix db 1, 0, 0, 0; ;We allocate the 7x4 Transposed Generation Matrix
        db 0, 1, 1, 1
 
 
-;***************** DATOS PARA LA IMPRESION *******************
+;***************** FORMAT DATA **********************
 
 input db 'Input: "X X X X"', 13, 10, '$'
 output db 'Output: "X X X X X X X"', 13, 10, '$'

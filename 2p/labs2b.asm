@@ -110,8 +110,10 @@ INICIO PROC
     MOV BH, bin[2]
     MOV BL, bin[3]
 
-    ; Calling the function that multiplies vector x matrix
+    ; Call the function that multiplies vector x matrix
     CALL MULTIPLY
+    ; Call the function that prints all the needed information
+    CALL PRINT_RESULTS 
 	
 END_PROG:
 	; PROGRAM END
@@ -214,8 +216,8 @@ BINARY ENDP
 ;__________________________________________________________________________
 ; SUBROUTINE THAT COMPUTES THE MULTIPLICATION OF A VECTOR AND A MATRIX AND
 ; RETURNS THE RESULT VECTOR MODULO 2
-; INPUT:    4 BINARY DIGITS WILL BE READ FROM DX:BX
-; OUTPUT:   THE VECTOR WILL BE STORED IN [DX:AX]
+; INPUT:    4 BINARY DIGITS WILL BE READ FROM DX AND BX
+; OUTPUT:   THE VECTOR SEGMENT WILL BE STORED IN DX, ITS OFFSET IN AX
 ;__________________________________________________________________________ 
 
 MULTIPLY PROC NEAR
@@ -297,13 +299,34 @@ EACH_ROW4:
     CMP SI, 7                       ; Until we have multiplied the 7 rows
     JNZ EACH_ROW4 
 
+    ; Call the function that computes the modulo
+    CALL MODULO_RESULT
+
+    ; Store result vector position in DX:AX
+    MOV DX, DS              ; DX is the segment where the result vector is.
+    MOV AX, OFFSET result   ; AX contains the OFFSET of the result vector.
+
+    RET
+MULTIPLY ENDP
+
+
+;__________________________________________________________________________
+; SUBROUTINE THAT COMPUTES A 7 BYTES VECTOR MODULO 2
+; INPUT:    7 BYTES VECTOR WILL BE READ FROM result VECTOR, PREVIOUSLY
+;           ALLOCATED
+; OUTPUT:   THE NEW VECTOR WILL BE STORED IN result VECTOR
+;__________________________________________________________________________ 
+
+
+MODULO_RESULT PROC NEAR
+
     ; The multiplication is done, now we compute modulo
     ; We use unsigned division (we are working with numbers that are
     ; the result of adding 1's and 0's)
     ; We use 8-bit division because the greatest number we are going to
     ; divide is 1*1 + 1*1 + 1*1 + 1*1 = 4 
-    MOV CL, 2 ; CL <= 2 because we are working modulo 2, 2 is the divisor
-    MOV DI, 0 ; DI will index the result vector
+    MOV CL, 2  ; CL <= 2 because we are working modulo 2, 2 is the divisor
+    MOV DI, 0  ; DI will index the result vector
     
 
 MODULO:
@@ -315,19 +338,29 @@ MODULO:
     INC DI                         ; We repeat for each element
     CMP DI, 7                      ; of the result vector
     JNZ MODULO
+    
+    RET
+MODULO_RESULT ENDP
 
-    ; Store result vector position in DX:AX
-    MOV DX, DS              ; DX is the segment where the result vector is.
-    MOV AX, OFFSET result   ; AX contains the OFFSET of the result vector.
+;__________________________________________________________________________
+; SUBROUTINE THAT PRINTS THE PREVIOUS COMPUTATION RESULT 
+; INPUT:    result 7 BYTES VECTOR PREVIOUSLY ALLOCATED  
+; OUTPUT:   INPUT, OUTPUT AND COMPUTATION INFORMATION ABOUT THE MULTIPLY
+;           FUNCTION
+; OBS:      THIS FUNCTION LEAVES REGISTERS DX, AX UNCHANGED
+;__________________________________________________________________________ 
+
+PRINT_RESULTS PROC NEAR
+
+    ; Since we want DX:AX to preserve the location of the result vector, 
+    ; computed in MULTIPLY, we copy their content in another registers
+    MOV BX, AX
+    MOV CX, DX
  
-
-    ; Last part: printing
-    MOV CX, DX              ; We need to preserve the value of DX
-                            ; since it contains part of the input
-                               
     ; ---------- INPUT LINE -----------
     ; We fill the 'X' in the input string with the input vector
     ;To get the ASCII code of register, we add it up with "0"    
+    
     MOV AL, result[0]
     ADD AL, "0"
     MOV input[8], AL
@@ -349,6 +382,7 @@ MODULO:
     ; ---------- OUTPUT LINE ----------
     ;We fill the 'X' of the output string with the reordered output vector
     ;To get the ASCII code of register, we add it up with "0"    
+    
     MOV AL, result[4]
     ADD AL, "0"
     MOV output[9], AL    ;P1
@@ -379,6 +413,7 @@ MODULO:
     ; -------- COMPUTATION MATRIX -------
     ;We print the computation line
     ;To get the ASCII code of register, we add it up with "0"    
+    
     MOV DX, OFFSET comp     ; DX has the offset of the string
     MOV AH, 9               ; Function 9: print ascii string
     INT 21H 
@@ -468,8 +503,12 @@ MODULO:
     MOV AH, 9               ; Function 9: print ascii string
     INT 21H 
  
+    ; We return to AX, DX their initial content 
+    MOV AX, BX
+    MOV DX, CX 
+    
     RET
-MULTIPLY ENDP
+PRINT_RESULTS ENDP
 
 ; END OF CODE SEGMENT
 CODE ENDS

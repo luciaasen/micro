@@ -1,5 +1,5 @@
 ;**************************************************************************
-; LAB SESSION 3 - EXERCISE 1 MBS 2018
+; LAB SESSION 3 - EXERCISE 2 MBS 2018
 ; TEAM #6
 ; AUTHORS:
 ; Lucia Asencio - lucia.asencio@estudiante.uam.es
@@ -73,13 +73,17 @@ _computeSemiMatches PROC FAR
 	
 	mov ax, 0 ; Initializing the return value
 	
+	; As we request the user a number without repeated digits
+	; (that control is implemented in the C programm) we can assume
+	; that there will not be any repetitions and make easier the assembly code.
+	
 	; Comparing the first digit with the rest
 	mov cl, [bx][0] ; CL <- secretNum[0]
 	mov ch, es:[si][1] ; CH <- attemptDigits[1]
 	cmp cl, ch
 	jne S11
-	inc ax
-	jmp S2
+	inc ax ; If they are equal we have a semi-match 
+	jmp S2 ; and we can stop comparing the first digit
 S11:
 	mov ch, es:[si][2] ; CH <- attemptDigits[2]
 	cmp cl, ch
@@ -135,8 +139,8 @@ S32:
 S4:
 
 	; Comparing the first digit with the rest
-	mov cl, [bx][3] ; CL <- secretNum[0]
-	mov ch, es:[si][0] ; CH <- attemptDigits[1]
+	mov cl, [bx][3] ; CL <- secretNum[3]
+	mov ch, es:[si][0] ; CH <- attemptDigits[0]
 	cmp cl, ch
 	jne S41
 	inc ax
@@ -148,7 +152,7 @@ S41:
 	inc ax
 	jmp FIN
 S42:
-	mov ch, es:[si][2] ; CH <- attemptDigits[1]
+	mov ch, es:[si][2] ; CH <- attemptDigits[2]
 	cmp cl, ch
 	jne FIN
 	inc ax

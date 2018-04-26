@@ -1,5 +1,5 @@
 ;**************************************************************************
-; LAB SESSION 2 - EXERCISE 2B MBS 2018
+; LAB SESSION 2 - EXERCISE 3 MBS 2018
 ; TEAM #6
 ; AUTHORS:
 ; Lucia Asencio - lucia.asencio@estudiante.uam.es

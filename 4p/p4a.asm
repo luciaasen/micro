@@ -16,12 +16,14 @@ START: JMP MAINP
 key DB 9h ; Our key is 6+3 = 9
 error_arg DB 'Invalid arguments: /I to install, /U to uninstall, <none> to see actual status.','$'
 errorn_arg DB 'Invalid number of arguments.','$'
-inst_stat DB 'In this moment the driver is installed.','$'
-some_stat DB 'In this moment a different driver is installed.','$'
+inst_stat DB 'STATUS: In this moment the driver is installed.','$'
+some_stat DB 'STATUS: In this moment a different driver is installed.','$'
 request_conf DB 10,'Confirm the installation of the new one (y/n): ','$'
-none_stat DB 'The driver is not installed.', '$'
+none_stat DB 'STATUS: The driver is not installed.', '$'
+current DB 'There is a driver installed.','$'
 conf db 2, ?, 2 dup (?), '$' ; Here is stored the confirmation entered by the user
 newline db 13,10,'$' ; <- Used to jump to a new line after requesting
+team_info DB 'TEAM #6',10, 'AUTHORS: Lucia Asencio, David Garcia','$'
 
 ; Routine executed by the interruption
 CESAR PROC FAR
@@ -46,8 +48,11 @@ DECR:
 	MOV CL, [DI] ; CL contains the character
 	CMP CL, '$'  ; If the character is the sentinel we stop
 	JE PRINTC
+	CMP CL, 20h  ; If it is not a symbol we dont codified it  
+	JL PASS
 	SUB CL, CH   ; Substracting to the ascii code the key value
 	MOV [DI], CL ; Saving in memory the encripted character
+PASS:	
 	INC DI
 	JMP DECR
 	
@@ -122,6 +127,18 @@ MAINP PROC FAR
 	JMP MAINEND
 
 CHECKSTATUS:
+
+	; Printing the team info
+	MOV AH, 9h               ; First we select the interruption type.
+	MOV DX, OFFSET team_info ; Now we move to dx the offset of the string.
+	INT 21H                  ; Calling the interruption.
+	
+	; Jumping to new line
+	MOV AH, 9h               ; First we select the interruption type.
+	MOV DX, OFFSET newline   ; Now we move to dx the offset of the string.
+	INT 21H                  ; Calling the interruption.
+
+
 	; Check status
 	MOV CX, 0
 	MOV DS, CX
@@ -142,6 +159,7 @@ CONT:
 	JNE SHOWOTHER
 	MOV AX, ES:[BX+2]
 	MOV DX, CS:[DI+2]
+	CMP AX, DX
 	JNE SHOWOTHER
 
 	MOV AH, 9h               ; First we select the interruption type.
@@ -181,13 +199,24 @@ CHECKARG:
 	MOV CX, ES:[55h*4+2]
 	MOV BX, ES:[55h*4]
 	CMP BX, 0
-	JNE REQU
+	JNE CHECKSAME
 	CMP CX, 0
 	JE INST
+CHECKSAME:
+	MOV ES, CX
+	MOV AX, ES:[BX]
+	MOV DI, OFFSET CESAR
+	MOV DX, [DI]
+	CMP AX, DX
+	JNE REQU
+	MOV AX, ES:[BX+2]
+	MOV DX, [DI+2]
+	CMP AX, DX
+	JE MAINEND
 REQU:
 	; Print the value.
 	MOV AH, 9h               ; First we select the interruption type.
-	MOV DX, OFFSET some_stat ; Now we move to dx the offset of the string.
+	MOV DX, OFFSET current   ; Now we move to dx the offset of the string.
 	INT 21H                  ; Calling the interruption.
 REP_REQU:
 	MOV DX, OFFSET request_conf ; Now we move to dx the offset of the string.

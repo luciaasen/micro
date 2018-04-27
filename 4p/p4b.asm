@@ -10,8 +10,9 @@
 ; DATA SEGMENT DEFINITION
 DATOS SEGMENT
 
-cipher db 'Hello, testing the Cesars cipher','$'
-newline db 13,10,'$' ; <- Used to jump to a new line after requesting
+request_c db 'Introduce a string to be cipher or a command (quit, cod, dec): ','$'
+newline db 13,10,'$' ; <- Used to jump to a new line
+cipher db 20, ?, 21 dup (?) ; Here is stored the string requested to the user
 
 DATOS ENDS
 
@@ -34,35 +35,111 @@ INICIO PROC
 ; INITIALIZE THE SEGMENT REGISTERS
 	MOV AX, DATOS
 	MOV DS, AX
-	
-	MOV AX, 10
-	MOV BX, 5
-	SUB BX, AX
-	
-	; Codifying
-	MOV DX, OFFSET cipher
-	MOV AH, 12h
-	INT 55h
-	
+
+LOOP1:
 	; Printing new line
 	MOV AH, 9h 			   ; First we select the interruption type.
 	MOV DX, OFFSET newline ; Now we move to dx the offset of the string.
 	INT 21H                ; Calling the interruption.
 	
+	; First we request an option to the user
+	MOV AH, 9h 			     ; First we select the interruption type.
+	MOV DX, OFFSET request_c ; Now we move to dx the offset of the string.
+	INT 21H                  ; Calling the interruption.
+	
+	; Reading string
+	MOV AH, 0Ah            ; Selecting the interruption.
+	MOV DX, OFFSET cipher  ; DX needs the offset of the string.
+	INT 21H                ; Reading from keyboard.
+	
+		
+	; Printing new line
+	MOV AH, 9h 			   ; First we select the interruption type.
+	MOV DX, OFFSET newline ; Now we move to dx the offset of the string.
+	INT 21H                ; Calling the interruption.
+	CALL ADDSENT
+	
+	CMP AL, 12h
+	JE COD
+	CMP AL, 13h
+	JE DECO
+
+	CALL CHECKCOMMAND
+	JMP LOOP1
+
+COD:	
+	; Codifying
+	MOV DX, OFFSET cipher
+	ADD DX, 2
+	MOV AH, 12h
+	INT 55h
+	MOV AL, 0
+	JMP LOOP1
+
+DECO:
 	; Decoding
 	MOV DX, OFFSET cipher
+	ADD DX, 2
 	MOV AH, 13h
 	INT 55h
-
+	MOV AL, 0
+	JMP LOOP1
 	
 END_PROG:
 	; PROGRAM END
 	MOV AX, 4C00H
 	INT 21H
-	
 INICIO ENDP
 
+;__________________________________________________________________________
+; SUBRUTINE TO ADD A SENTINEL TO THE STRING REQUESTED TO THE USER
+;__________________________________________________________________________
 
+ADDSENT PROC NEAR
+
+	MOV BX, 0
+	MOV BL, cipher[1]        ; Number of characters read
+	ADD BL, 2
+	MOV cipher[BX], '$'
+	RET 
+ADDSENT ENDP
+
+;__________________________________________________________________________
+; SUBRUTINE TO CHECK THE COMMAND REQUESTED TO THE USER
+; If command is quit the program ends, if it is cod it returns 12h in al,
+; if it is dec returns 13h al.
+;__________________________________________________________________________
+
+CHECKCOMMAND PROC NEAR
+	MOV BX, 0
+	MOV BL, cipher[1]
+	CMP BL, 4
+	JNE CHECK2
+	CMP WORD PTR cipher[2], 'uq'
+	JNE ENDCHECK
+	CMP WORD PTR cipher[4], 'ti'
+	JE END_PROG
+	JMP ENDCHECK
+CHECK2:
+	CMP BL, 3
+	JNE ENDCHECK
+	CMP WORD PTR cipher[2], 'oc'
+	JNE CHECK3
+	CMP BYTE PTR cipher[4], 'd'
+	JNE CHECK3
+	MOV AL, 12h
+	JMP ENDCHECK
+CHECK3:
+	CMP WORD PTR cipher[2], 'ed'
+	JNE ENDCHECK
+	CMP BYTE PTR cipher[4], 'c'
+	JNE ENDCHECK
+	MOV AL, 13h
+	
+ENDCHECK:
+	RET
+
+CHECKCOMMAND ENDP
 
 ; END OF CODE SEGMENT
 CODE ENDS

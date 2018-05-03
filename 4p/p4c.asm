@@ -31,9 +31,9 @@ cipher db 20, ?, 21 dup (?) ; Here is stored the string requested to the user
 
 ; Routine executed by the interruption
 RTC_rsi PROC FAR
-	sti
+	sti ; Allows RTC_rsi to be interrupted
 	push ax dx
-	mov al, 0Ch
+	mov al, 0Ch 
 	out 70h, al ; Access to 0Ch register of RTC
 	in al, 71h ; Read the 0Ch register
 	
@@ -51,7 +51,7 @@ RTC_rsi PROC FAR
 	
 	; The character to be printed should be saved in DS:[BX]
 	mov ah, 2 ; Function number = 2
-	mov dl, [bx]
+	mov dl, [bx] ; dl gets the character to be printed
 	mov cx, 0
 	cmp dl, '$' ; If is the sentinel we have finished
 	je final
@@ -71,7 +71,9 @@ INSTALL PROC FAR
 	MOV ES, AX 
 	MOV AX, OFFSET RTC_rsi
 	MOV BX, CS
-	
+	; Now, AX and BX have the memory direction
+    ; of the code to be run after interruption
+
 	; Installing in the interruption 55h
 	CLI
 	MOV ES:[70h*4], AX 
@@ -98,7 +100,7 @@ UNINSTALL PROC FAR
 	MOV AH, 49h          
 	INT 21H				 ; Release segment
 	
-	; Now we set the vector to zero
+	; Now we clear ints, set the vector to zero and set ints again
 	CLI
 	MOV DS:[70h*4], CX
 	MOV DS:[70h*4+2], CX
@@ -116,7 +118,7 @@ confRTC PROC FAR
 	MOV AL, 00101111b ; DV=010b, RS=1111b (7 == 2 Hz)
 	; It is not possible to set a frequency lower than 2Hz
 	OUT 71h, AL ; Write 0Ah register
-	; Active Interrupt
+	; Activate Interrupt
 	MOV AL, 0Bh
 	OUT 70h, AL ; Enable 0Bh register
 	IN AL, 71h ; Read the 0Bh register
@@ -159,7 +161,7 @@ MAINP PROC NEAR
 	
 	; Print the value.
 	MOV AH, 9h               ; First we select the interruption type.
-	MOV DX, OFFSET errorn_arg ; Now we move to dx the offset of the string.
+	MOV DX, OFFSET errorn_arg ; Now we move to dx the offset of the errpr string.
 	INT 21H                  ; Calling the interruption.
 	JMP MAINEND
 
@@ -179,8 +181,10 @@ CHECKARG:
 	CMP BX, 0
 	JNE CHECKSAME
 	CMP CX, 0
-	JE INST
+	JE INST 
 CHECKSAME:
+; If its not empty, we check if it is the same 
+; we want to install
 	MOV ES, CX
 	MOV AX, ES:[BX]
 	MOV DI, OFFSET RTC_rsi
@@ -191,6 +195,8 @@ CHECKSAME:
 	MOV DX, [DI+2]
 	CMP AX, DX
 	JE MAINEND
+; If it is not the same vector, we need the user
+; to tell us whether to keep the current vector or not
 REQU:
 	; Print the value.
 	MOV AH, 9h               ; First we select the interruption type.
@@ -217,6 +223,7 @@ REP_REQU:
 	JMP MAINEND
 
 INST:
+    ; We install the interruption
 	CALL INSTALL
 CHECKU:
 	CMP AX, 552Fh

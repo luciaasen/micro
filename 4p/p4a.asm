@@ -40,7 +40,22 @@ ENC:
 	MOV CL, [DI] ; CL contains the character
 	CMP CL, '$'  ; If the character is the sentinel we stop
 	JE PRINTC
+	CMP CL, 14
+	JNE RIGHT1
+	MOV CL, '-'
+	JMP FIN1
+RIGHT1:
+	CMP CL, 76h
+	JB WELL
+	CMP CL, 'z'
+	JNE SUBAS
+	MOV CL, 3
+	JMP FIN1
+SUBAS:
+	SUB CL, 5fh
+WELL:
 	ADD CL, CH   ; Adding to the ascii code the key value
+FIN1:
 	MOV [DI], CL ; Saving in memory the encripted character
 	INC DI
 	JMP ENC
@@ -48,9 +63,24 @@ DECR:
 	MOV CL, [DI] ; CL contains the character
 	CMP CL, '$'  ; If the character is the sentinel we stop
 	JE PRINTC
-	CMP CL, 20h  ; If it is not a symbol we dont codified it  
-	JL PASS
+	CMP CL, 3
+	JNE CONT1
+	MOV CL, 'z'
+	JMP OTHERPASS
+CONT1:
+	CMP CL, '-'
+	JNE CONT2
+	MOV CL, 14
+	JMP OTHERPASS
+CONT2:
+	CMP CL, 28h
+	JA WELL2
+	CMP CL, '-'
+	JA WELL2
+	ADD CL, 5fh
+WELL2:
 	SUB CL, CH   ; Substracting to the ascii code the key value
+OTHERPASS:
 	MOV [DI], CL ; Saving in memory the encripted character
 PASS:	
 	INC DI

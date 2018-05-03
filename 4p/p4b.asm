@@ -10,7 +10,9 @@
 ; DATA SEGMENT DEFINITION
 DATOS SEGMENT
 
-request_c db 'Introduce a string to be cipher or a command (quit, cod, dec): ','$'
+request_c db 'Introduce a command (quit, cod, dec): ','$'
+request_enc db 'Introduce a string to be encoded: ','$'
+request_dec db 'Introduce a string to be decoded: ','$'
 newline db 13,10,'$' ; <- Used to jump to a new line
 cipher db 20, ?, 21 dup (?) ; Here is stored the string requested to the user
 
@@ -42,7 +44,13 @@ LOOP1:
 	MOV DX, OFFSET newline ; Now we move to dx the offset of the string.
 	INT 21H                ; Calling the interruption.
 	
-	; First we request an option to the user
+	; Checking if the previous string was a command (dec or cod)
+	CMP AL, 12h
+	JE COD
+	CMP AL, 13h
+	JE DECO
+
+	; If not we request a command to the user
 	MOV AH, 9h 			     ; First we select the interruption type.
 	MOV DX, OFFSET request_c ; Now we move to dx the offset of the string.
 	INT 21H                  ; Calling the interruption.
@@ -52,22 +60,29 @@ LOOP1:
 	MOV DX, OFFSET cipher  ; DX needs the offset of the string.
 	INT 21H                ; Reading from keyboard.
 	
-		
-	; Printing new line
-	MOV AH, 9h 			   ; First we select the interruption type.
-	MOV DX, OFFSET newline ; Now we move to dx the offset of the string.
-	INT 21H                ; Calling the interruption.
+	; Adding sentinel and checking if the string is a valid command
 	CALL ADDSENT
-	
-	CMP AL, 12h
-	JE COD
-	CMP AL, 13h
-	JE DECO
-
 	CALL CHECKCOMMAND
 	JMP LOOP1
 
 COD:	
+
+	; Requesting string
+	MOV AH, 9h 			       ; First we select the interruption type.
+	MOV DX, OFFSET request_enc ; Now we move to dx the offset of the string.
+	INT 21H                    ; Calling the interruption.
+	
+	; Reading string
+	MOV AH, 0Ah            ; Selecting the interruption.
+	MOV DX, OFFSET cipher  ; DX needs the offset of the string.
+	INT 21H                ; Reading from keyboard.
+	CALL ADDSENT           ; Adding the sentinel
+	
+	; Printing new line
+	MOV AH, 9h 			   ; First we select the interruption type.
+	MOV DX, OFFSET newline ; Now we move to dx the offset of the string.
+	INT 21H                ; Calling the interruption.
+	
 	; Codifying
 	MOV DX, OFFSET cipher
 	ADD DX, 2
@@ -77,6 +92,23 @@ COD:
 	JMP LOOP1
 
 DECO:
+
+	; First we request an option to the user
+	MOV AH, 9h 			       ; First we select the interruption type.
+	MOV DX, OFFSET request_dec ; Now we move to dx the offset of the string.
+	INT 21H                    ; Calling the interruption.
+	
+	; Reading string
+	MOV AH, 0Ah            ; Selecting the interruption.
+	MOV DX, OFFSET cipher  ; DX needs the offset of the string.
+	INT 21H                ; Reading from keyboard.
+	CALL ADDSENT           ; Adding the sentinel
+	
+	; Printing new line
+	MOV AH, 9h 			   ; First we select the interruption type.
+	MOV DX, OFFSET newline ; Now we move to dx the offset of the string.
+	INT 21H                ; Calling the interruption.
+	
 	; Decoding
 	MOV DX, OFFSET cipher
 	ADD DX, 2
